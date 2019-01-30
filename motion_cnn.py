@@ -34,14 +34,14 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='man
 def main():
     global arg
     arg = parser.parse_args()
-    print arg
+    print(arg)
 
     #Prepare DataLoader
     data_loader = dataloader.Motion_DataLoader(
                         BATCH_SIZE=arg.batch_size,
                         num_workers=8,
-                        path='/home/ubuntu/data/UCF101/tvl1_flow/',
-                        ucf_list='/home/ubuntu/cvlab/pytorch/ucf101_two_stream/github/UCF_list/',
+                        path='/home/zhaowl/datasets/UCF101/frames/jpegs_256/',
+                        ucf_list='/home/zhaowl/two-stream-action-recognition/UCF_list/',
                         ucf_split='01',
                         in_channel=10,
                         )

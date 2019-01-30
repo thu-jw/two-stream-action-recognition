@@ -3,30 +3,24 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import random
-from split_train_test_video import *
+from .split_train_test_video import *
 from skimage import io, color, exposure
 
 class spatial_dataset(Dataset):  
     def __init__(self, dic, root_dir, mode, transform=None):
- 
-        self.keys = dic.keys()
-        self.values=dic.values()
+        self.keys = list(dic.keys())
+        self.values = list(dic.values())
         self.root_dir = root_dir
-        self.mode =mode
+        self.mode = mode
         self.transform = transform
 
     def __len__(self):
         return len(self.keys)
 
     def load_ucf_image(self,video_name, index):
-        if video_name.split('_')[0] == 'HandstandPushups':
-            n,g = video_name.split('_',1)
-            name = 'HandStandPushups_'+g
-            path = self.root_dir + 'HandstandPushups'+'/separated_images/v_'+name+'/v_'+name+'_'
-        else:
-            path = self.root_dir + video_name.split('_')[0]+'/separated_images/v_'+video_name+'/v_'+video_name+'_'
-         
-        img = Image.open(path +str(index)+'.jpg')
+
+        path = self.root_dir + 'v_' +  video_name + f'/frame{index:06d}.jpg'
+        img = Image.open(path)
         transformed_img = self.transform(img)
         img.close()
 
@@ -38,9 +32,9 @@ class spatial_dataset(Dataset):
             video_name, nb_clips = self.keys[idx].split(' ')
             nb_clips = int(nb_clips)
             clips = []
-            clips.append(random.randint(1, nb_clips/3))
-            clips.append(random.randint(nb_clips/3, nb_clips*2/3))
-            clips.append(random.randint(nb_clips*2/3, nb_clips+1))
+            clips.append(random.randint(1, nb_clips // 3))
+            clips.append(random.randint(nb_clips // 3, nb_clips * 2 // 3))
+            clips.append(random.randint(nb_clips * 2 // 3, nb_clips + 1))
             
         elif self.mode == 'val':
             video_name, index = self.keys[idx].split(' ')
@@ -80,7 +74,7 @@ class spatial_dataloader():
 
     def load_frame_count(self):
         #print '==> Loading frame number of each video'
-        with open('dic/frame_count.pickle','rb') as file:
+        with open('dataloader/dic/frame_count.pickle','rb') as file:
             dic_frame = pickle.load(file)
         file.close()
 
@@ -110,14 +104,14 @@ class spatial_dataloader():
             self.dic_training[key] = self.train_video[video]
                     
     def val_sample20(self):
-        print '==> sampling testing frames'
-        self.dic_testing={}
+        print('==> sampling testing frames')
+        self.dic_testing = {}
         for video in self.test_video:
-            nb_frame = self.frame_count[video]-10+1
-            interval = int(nb_frame/19)
+            nb_frame = self.frame_count[video] - 10 + 1
+            interval = nb_frame // 19
             for i in range(19):
-                frame = i*interval
-                key = video+ ' '+str(frame+1)
+                frame = i * interval
+                key = video + ' ' + str(frame+1)
                 self.dic_testing[key] = self.test_video[video]      
 
     def train(self):
@@ -127,8 +121,8 @@ class spatial_dataloader():
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
                 ]))
-        print '==> Training data :',len(training_set),'frames'
-        print training_set[1][0]['img1'].size()
+        print('==> Training data :',len(training_set),'frames')
+        print(training_set[1][0]['img1'].size())
 
         train_loader = DataLoader(
             dataset=training_set, 
@@ -144,8 +138,8 @@ class spatial_dataloader():
                 transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
                 ]))
         
-        print '==> Validation data :',len(validation_set),'frames'
-        print validation_set[1][1].size()
+        print('==> Validation data :',len(validation_set),'frames')
+        print(validation_set[1][1].size())
 
         val_loader = DataLoader(
             dataset=validation_set, 
@@ -153,10 +147,6 @@ class spatial_dataloader():
             shuffle=False,
             num_workers=self.num_workers)
         return val_loader
-
-
-
-
 
 if __name__ == '__main__':
     
